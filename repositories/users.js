@@ -18,7 +18,10 @@ class UserRepository {
     }
 
     async create(attrs){
-        
+        const records = await this.getAll();
+        records.push(attrs);
+
+        await fs.promises.writeFile(this.filename,JSON.stringify(records))
     }
 }
 
