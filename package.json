@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":"nodemon index.js"
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-session": "^2.1.0",
     "express": "^4.17.1",
     "nodemon": "^1.19.4"
   }
