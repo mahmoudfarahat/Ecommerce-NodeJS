@@ -32,8 +32,13 @@ module.exports = {
         }),
     requireVaildPassword: check('password').trim()
         .custom(async (password, { req }) => {
+      
             const user = await usersRepo.getOneBy({ email: req.body.email })
+    
             const validPassword = await usersRepo.comparePasswords(user.password, password)
+            console.log(1)
+            console.log(validPassword)
+            console.log(2)
             if (!validPassword) {
                 throw new Error('Invalid password')
             }
