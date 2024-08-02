@@ -1,25 +1,27 @@
 const express = require('express')
+const { check  , validationResult} = require('express-validator')
 const usersRepo = require('../../repositories/users')
 const signupTemplate = require('../../views/admin/auth/signup')
 const signinTemplate = require('../../views/admin/auth/signin')
-
+const { requireEmail , requirePassword ,requirePasswordConfirmation} = require('./validators')
 const router = express.Router();
 
 router.get('/signup',(req,res)=>{
     res.send(signupTemplate({req}));
 });
 
-router.post('/signup', async (req,res)=>{
-    console.log(req.body)
-    const {email , password , passwordConfirmation } = req.body
-
-    const existingUser = await usersRepo.getOneBy({email: email})
- if(existingUser){
-    return res.send('Email in use');
- }
-if(password !== passwordConfirmation ){
-    return res.send('Passwords must Match');
+router.post('/signup', [
+    requireEmail,
+    requirePassword,
+requirePasswordConfirmation
+],async (req,res)=>{
+   const errors = validationResult(req)
+    const {email , password , passwordConfirmation } = req.body 
+if(!errors.isEmpty()){
+    return res.send(signupTemplate({req , errors}))
 }
+
+   
 
   const user =  await usersRepo.create({email , password});
 
@@ -39,18 +41,30 @@ router.get('/signin',(req,res)=>{
 })
 
 
-router.post('/signin',async (req,res)=>{
-    const {email , password} = req.body;
+router.post('/signin',[
+check('email').trim().normalizeEmail().isEmail().withMessage('Must provide a valid email')
+.custom(async(email)=>{
     const user = await usersRepo.getOneBy({email});
     if(!user){
-        return res.send('Email not Found')
+        throw new Error('Email not Found')
     }
-
+}),
+check('password').trim()
+.custom(async(password , {req})=>{
+    const user = await usersRepo.getOneBy({email:req.body.email})
     const validPassword = await usersRepo.comparePasswords(user.password,password)
     if(!validPassword){
-        return res.send('Invalid password')
+       throw new Error('Invalid password')
     }
-    req.session.userId = user.id;
+})
+
+
+], async (req,res)=>{
+    const errors = validationResult(req)
+    console.log(errors)
+    const {email , password} = req.body;
+    const user = await usersRepo.getOneBy({email});
+      req.session.userId = user.id;
     return res.send('You are signed in')
 
 })
