@@ -60,6 +60,7 @@ module.exports = class Repository {
     }
 
     async getOneBy(filters){
+        console.log(filters)
         const records = await this.getAll()
         for(let record of records){
             let found = true;
